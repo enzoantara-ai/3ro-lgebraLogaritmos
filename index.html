@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Misión Logaritmo · 10 preguntas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0F2A43;
+    --ink-soft: #3E5871;
+    --paper: #F4F8FB;
+    --card: #FFFFFF;
+    --line: #C9D8E5;
+    --cursor: #FFC93C;
+    --ok: #138A7B;
+    --ok-bg: #DDF3EF;
+    --bad: #C8402B;
+    --bad-bg: #FBE4DF;
+    --radius: 14px;
+    --display: "Bricolage Grotesque", "Trebuchet MS", system-ui, sans-serif;
+    --body: "Atkinson Hyperlegible", "Segoe UI", Verdana, system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    font-family: var(--body);
+    color: var(--ink);
+    background: var(--paper);
+    min-height: 100vh;
+    line-height: 1.5;
+    font-size: 18px;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 20px 16px 48px; }
+
+  header.top {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+    margin-bottom: 14px;
+  }
+  .brand { font-family: var(--display); font-weight: 800; font-size: 1.3rem; letter-spacing: -0.01em; white-space: nowrap; }
+  .stats { font-size: 0.9rem; color: var(--ink-soft); text-align: right; white-space: nowrap; }
+  .stats b { color: var(--ink); font-size: 1.1rem; }
+
+  /* ---------- Regla logarítmica (progreso) ---------- */
+  .rule {
+    background: var(--ink);
+    border-radius: var(--radius);
+    padding: 10px 12px 8px;
+    margin-bottom: 18px;
+  }
+  .rule svg { width: 100%; height: auto; display: block; overflow: visible; }
+  .rule .tick { stroke: #7F9BB5; stroke-width: 1.5; }
+  .rule .lbl { fill: #CFE0EF; font: 700 12px var(--body); text-anchor: middle; }
+  .rule .base { stroke: #7F9BB5; stroke-width: 1.5; }
+  .rule .dot { fill: transparent; stroke: #7F9BB5; stroke-width: 1.5; transition: fill .25s, stroke .25s; }
+  .rule .dot.ok { fill: #3CCBB6; stroke: #3CCBB6; }
+  .rule .dot.bad { fill: #FF8A73; stroke: #FF8A73; }
+  .rule .cursor { fill: var(--cursor); transition: transform .5s cubic-bezier(.3,.8,.3,1); }
+  .rule-cap { color: #A9C1D6; font-size: 0.8rem; margin: 4px 2px 0; }
+
+  /* ---------- Tarjetas ---------- */
+  .card {
+    background: var(--card);
+    border: 2px solid var(--line);
+    border-radius: var(--radius);
+    padding: 22px 20px;
+  }
+  .qnum { color: var(--ink-soft); font-size: 0.95rem; margin: 0 0 6px; }
+  .qtext { font-family: var(--display); font-weight: 600; font-size: 1.45rem; line-height: 1.35; margin: 0 0 18px; }
+  .qtext sub, .qtext sup, .opt sub, .opt sup, .explain sub, .explain sup { font-size: 0.72em; line-height: 0; }
+  .math { font-family: "Cambria Math", "STIX Two Math", Cambria, "Times New Roman", serif; font-style: italic; }
+
+  .options { display: grid; gap: 10px; }
+  .opt {
+    display: flex; align-items: center; gap: 12px; text-align: left;
+    width: 100%; padding: 12px 14px;
+    background: var(--paper); color: var(--ink);
+    border: 2px solid var(--line); border-radius: 12px;
+    font: inherit; cursor: pointer;
+    transition: border-color .15s, background .15s;
+  }
+  .opt:hover:not(:disabled) { border-color: var(--ink); background: #fff; }
+  .opt:focus-visible, .btn:focus-visible { outline: 3px solid var(--cursor); outline-offset: 2px; }
+  .opt .key {
+    flex: none; width: 30px; height: 30px; border-radius: 8px;
+    display: grid; place-items: center;
+    background: var(--ink); color: #fff; font-weight: 700; font-size: 0.95rem;
+  }
+  .opt.correct { border-color: var(--ok); background: var(--ok-bg); }
+  .opt.correct .key { background: var(--ok); }
+  .opt.wrong { border-color: var(--bad); background: var(--bad-bg); }
+  .opt.wrong .key { background: var(--bad); }
+  .opt:disabled { cursor: default; }
+  .opt.dim { opacity: .55; }
+
+  .feedback { margin-top: 16px; padding: 14px 16px; border-radius: 12px; }
+  .feedback.ok { background: var(--ok-bg); border-left: 6px solid var(--ok); }
+  .feedback.bad { background: var(--bad-bg); border-left: 6px solid var(--bad); }
+  .feedback h3 { margin: 0 0 4px; font-family: var(--display); font-size: 1.15rem; }
+  .explain { margin: 0; font-size: 1rem; }
+
+  .btn {
+    font: inherit; font-weight: 700; cursor: pointer;
+    background: var(--ink); color: #fff; border: 0; border-radius: 12px;
+    padding: 12px 22px; margin-top: 16px;
+    transition: transform .12s, background .15s;
+  }
+  .btn:hover { background: #1C4468; }
+  .btn:active { transform: translateY(1px); }
+  .btn.alt { background: transparent; color: var(--ink); border: 2px solid var(--ink); }
+  .btn.alt:hover { background: #fff; }
+
+  /* ---------- Inicio y final ---------- */
+  .hero h1 { font-family: var(--display); font-weight: 800; font-size: 2.3rem; line-height: 1.1; margin: 0 0 10px; letter-spacing: -0.02em; }
+  .hero p { margin: 0 0 10px; }
+  .hero ul { margin: 8px 0 4px; padding-left: 20px; }
+  .hero li { margin: 4px 0; }
+  .big { font-family: var(--display); font-weight: 800; font-size: 3.2rem; line-height: 1; }
+  .rank { font-family: var(--display); font-weight: 600; font-size: 1.3rem; margin: 6px 0 14px; }
+  .review { margin: 14px 0 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+  .review li { background: var(--paper); border: 2px solid var(--line); border-radius: 12px; padding: 10px 12px; font-size: 0.98rem; }
+  .review .r-q { font-weight: 700; display: block; margin-bottom: 2px; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .hidden { display: none !important; }
+
+  @media (max-width: 480px) {
+    body { font-size: 17px; }
+    .brand { font-size: 1.1rem; }
+    .stats { font-size: 0.82rem; }
+    .qtext { font-size: 1.28rem; }
+    .hero h1 { font-size: 1.9rem; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="brand">Misión Logaritmo</div>
+    <div class="stats" id="stats" aria-live="polite"></div>
+  </header>
+
+  <div class="rule" id="rule" aria-hidden="true">
+    <svg viewBox="0 0 640 58" role="img" aria-label="Regla logarítmica que muestra tu avance">
+      <line class="base" x1="20" y1="22" x2="620" y2="22"/>
+      <g id="ticks"></g>
+      <polygon class="cursor" id="cursor" points="-8,0 8,0 0,20"/>
+    </svg>
+    <p class="rule-cap">Tu avance va en escala logarítmica: del 1 al 10, ¡los números se van juntando!</p>
+  </div>
+
+  <!-- Pantalla de inicio -->
+  <section class="card hero" id="screen-start">
+    <h1>Misión Logaritmo</h1>
+    <p>10 preguntas para comprobar si ya dominas los logaritmos. Puedes jugar las veces que quieras: cada partida mezcla el orden de las respuestas.</p>
+    <ul>
+      <li>Elige una respuesta con el mouse, con el dedo o con las teclas <b>A, B, C, D</b>.</li>
+      <li>Después de cada pregunta verás por qué la respuesta es correcta.</li>
+      <li>Cada acierto suma 10 puntos. Tres aciertos seguidos suman 5 puntos extra.</li>
+    </ul>
+    <button class="btn" id="btn-start">Empezar misión</button>
+  </section>
+
+  <!-- Pantalla de pregunta -->
+  <section class="card hidden" id="screen-quiz">
+    <p class="qnum" id="qnum"></p>
+    <h2 class="qtext" id="qtext"></h2>
+    <div class="options" id="options"></div>
+    <div id="feedback" class="hidden" role="status" aria-live="polite"></div>
+    <button class="btn hidden" id="btn-next">Siguiente pregunta</button>
+  </section>
+
+  <!-- Pantalla final -->
+  <section class="card hero hidden" id="screen-end">
+    <p class="qnum">Resultado final</p>
+    <div class="big" id="end-score"></div>
+    <p class="rank" id="end-rank"></p>
+    <p id="end-detail"></p>
+    <div id="end-review"></div>
+    <div class="row">
+      <button class="btn" id="btn-again">Jugar otra vez</button>
+    </div>
+  </section>
+
+</div>
+
+<script>
+/* ============================================================
+   PREGUNTAS  (la primera opción de cada lista es la correcta;
+   el juego mezcla el orden en cada partida)
+   ============================================================ */
+const QUESTIONS = [
+  {
+    q: 'Calcula: log<sub>5</sub> 125',
+    opts: ['3', '5', '25', '1/3'],
+    why: 'log<sub>5</sub> 125 = x significa 5<sup>x</sup> = 125. Como 5<sup>3</sup> = 125, entonces x = 3.'
+  },
+  {
+    q: 'Calcula: log<sub>9</sub> 3',
+    opts: ['1/2', '2', '3', '1/3'],
+    why: 'Buscamos x tal que 9<sup>x</sup> = 3. Como √9 = 3, es decir 9<sup>1/2</sup> = 3, entonces x = 1/2.'
+  },
+  {
+    q: 'Calcula: log<sub>7</sub> 7 + log<sub>5</sub> 1',
+    opts: ['1', '0', '7', '8'],
+    why: 'Siempre se cumple log<sub>b</sub> b = 1 y log<sub>b</sub> 1 = 0. Entonces 1 + 0 = 1.'
+  },
+  {
+    q: 'Lucía dice: «log<sub>2</sub>(4 + 4) = log<sub>2</sub> 4 + log<sub>2</sub> 4 = 2 + 2 = 4». ¿Qué está pasando?',
+    opts: [
+      'Lucía se equivoca: log<sub>2</sub>(4 + 4) = log<sub>2</sub> 8 = 3, pero 2 + 2 = 4. La propiedad es para el producto, no para la suma.',
+      'Lucía tiene razón: el logaritmo de una suma es la suma de los logaritmos.',
+      'Lucía se equivoca porque log<sub>2</sub> 8 = 4.',
+      'Los dos resultados son 2.'
+    ],
+    why: 'La propiedad es log<sub>b</sub>(A·B) = log<sub>b</sub> A + log<sub>b</sub> B: convierte un <b>producto</b> en suma. Con 4 + 4 no se puede separar. Sí funciona así: log<sub>2</sub>(4·4) = log<sub>2</sub> 4 + log<sub>2</sub> 4 = 4.'
+  },
+  {
+    q: 'Calcula: log 100 + ln e',
+    opts: ['3', '2', '10', '101'],
+    why: 'log 100 es de base 10: 10<sup>2</sup> = 100, así que vale 2. ln e = log<sub>e</sub> e = 1. Suma: 2 + 1 = 3.'
+  },
+  {
+    q: 'Calcula: log<sub>6</sub> 2 + log<sub>6</sub> 3',
+    opts: ['1', '0', '5', 'log<sub>6</sub> 5'],
+    why: 'Suma de logaritmos = logaritmo del producto: log<sub>6</sub>(2·3) = log<sub>6</sub> 6 = 1.'
+  },
+  {
+    q: 'Reduce: T = log<sub>3</sub> 6 + log<sub>3</sub> 15 − log<sub>3</sub> 10',
+    opts: ['2', '1', '3', '6'],
+    why: 'Las sumas son productos y la resta es cociente: T = log<sub>3</sub>(6·15 / 10) = log<sub>3</sub> 9 = 2.'
+  },
+  {
+    q: 'Calcula con cambio de base: log<sub>2</sub> 5 · log<sub>5</sub> 8',
+    opts: ['3', '1', '5', '8'],
+    why: 'Con cambio de base, log<sub>2</sub> 5 = (log 5)/(log 2) y log<sub>5</sub> 8 = (log 8)/(log 5). Al multiplicar, log 5 se simplifica y queda (log 8)/(log 2) = log<sub>2</sub> 8 = 3.'
+  },
+  {
+    q: 'Si log<sub>6</sub> 2 = k, ¿cuánto vale log<sub>6</sub> 108 en términos de k?',
+    opts: ['3 − k', '3k', 'k − 3', '2 − k'],
+    why: 'Como 6 = 2·3, se cumple log<sub>6</sub> 2 + log<sub>6</sub> 3 = 1, así que log<sub>6</sub> 3 = 1 − k. Además 108 = 2<sup>2</sup>·3<sup>3</sup>, entonces log<sub>6</sub> 108 = 2k + 3(1 − k) = 3 − k.'
+  },
+  {
+    q: 'Resuelve: log<sub>2</sub>(x<sup>2</sup> − 2x + 4) = log<sub>2</sub>(2x<sup>2</sup> + 1)',
+    opts: ['{−3; 1}', '{3; 1}', '{−3; −1}', '{0; 1}'],
+    why: 'Si log<sub>b</sub> M = log<sub>b</sub> N, entonces M = N: x<sup>2</sup> − 2x + 4 = 2x<sup>2</sup> + 1 → x<sup>2</sup> + 2x − 3 = 0 → (x + 3)(x − 1) = 0. Verificamos: para x = −3 los argumentos valen 19 y 19; para x = 1 valen 3 y 3. Ambos son positivos, así que las dos soluciones sirven.'
+  }
+];
+
+/* ============================================================
+   LÓGICA DEL JUEGO
+   ============================================================ */
+const $ = (id) => document.getElementById(id);
+const screens = { start: $('screen-start'), quiz: $('screen-quiz'), end: $('screen-end') };
+const LETTERS = ['A', 'B', 'C', 'D'];
+const TOTAL = QUESTIONS.length;
+
+let deck = [];       // preguntas con opciones mezcladas
+let idx = 0;
+let score = 0;
+let streak = 0;
+let hits = 0;
+let answered = false;
+let results = [];    // 'ok' | 'bad'
+let missed = [];
+
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function show(name) {
+  Object.entries(screens).forEach(([k, el]) => el.classList.toggle('hidden', k !== name));
+}
+
+/* --- Regla logarítmica --- */
+const SVGNS = 'http://www.w3.org/2000/svg';
+const xPos = (n) => 20 + 600 * Math.log10(n);
+
+function buildRule() {
+  const g = $('ticks');
+  g.innerHTML = '';
+  for (let n = 1; n <= TOTAL; n++) {
+    const x = xPos(n);
+    const t = document.createElementNS(SVGNS, 'line');
+    t.setAttribute('class', 'tick');
+    t.setAttribute('x1', x); t.setAttribute('x2', x);
+    t.setAttribute('y1', 22); t.setAttribute('y2', 32);
+    g.appendChild(t);
+    const l = document.createElementNS(SVGNS, 'text');
+    l.setAttribute('class', 'lbl');
+    l.setAttribute('x', x); l.setAttribute('y', 50);
+    l.textContent = n;
+    g.appendChild(l);
+    const d = document.createElementNS(SVGNS, 'circle');
+    d.setAttribute('class', 'dot');
+    d.setAttribute('id', 'dot' + n);
+    d.setAttribute('cx', x); d.setAttribute('cy', 22); d.setAttribute('r', 4.5);
+    g.appendChild(d);
+  }
+  moveCursor(1);
+}
+function moveCursor(n) {
+  $('cursor').style.transform = `translate(${xPos(n)}px, 0px)`;
+}
+function markDot(n, cls) {
+  const d = $('dot' + n);
+  d.setAttribute('class', 'dot ' + cls);
+}
+
+function renderStats() {
+  $('stats').innerHTML = `Puntos: <b>${score}</b> · Racha: <b>${streak}</b>`;
+}
+
+/* --- Flujo --- */
+function startGame() {
+  deck = QUESTIONS.map((item) => {
+    const correctText = item.opts[0];
+    const shuffled = shuffle(item.opts);
+    return { q: item.q, why: item.why, opts: shuffled, correct: shuffled.indexOf(correctText) };
+  });
+  idx = 0; score = 0; streak = 0; hits = 0; results = []; missed = [];
+  buildRule();
+  renderStats();
+  show('quiz');
+  renderQuestion();
+}
+
+function renderQuestion() {
+  answered = false;
+  const item = deck[idx];
+  $('qnum').textContent = `Pregunta ${idx + 1} de ${TOTAL}`;
+  $('qtext').innerHTML = item.q;
+  moveCursor(idx + 1);
+  const box = $('options');
+  box.innerHTML = '';
+  item.opts.forEach((text, i) => {
+    const b = document.createElement('button');
+    b.className = 'opt';
+    b.type = 'button';
+    b.innerHTML = `<span class="key">${LETTERS[i]}</span><span>${text}</span>`;
+    b.addEventListener('click', () => choose(i));
+    box.appendChild(b);
+  });
+  $('feedback').className = 'hidden';
+  $('feedback').innerHTML = '';
+  $('btn-next').classList.add('hidden');
+  $('btn-next').textContent = idx === TOTAL - 1 ? 'Ver mi resultado' : 'Siguiente pregunta';
+  box.querySelector('.opt').focus({ preventScroll: true });
+}
+
+function choose(i) {
+  if (answered) return;
+  answered = true;
+  const item = deck[idx];
+  const buttons = [...document.querySelectorAll('#options .opt')];
+  buttons.forEach((b, k) => {
+    b.disabled = true;
+    if (k === item.correct) b.classList.add('correct');
+    else if (k === i) b.classList.add('wrong');
+    else b.classList.add('dim');
+  });
+
+  const good = i === item.correct;
+  let bonusTxt = '';
+  if (good) {
+    hits++; streak++;
+    let pts = 10;
+    if (streak >= 3) { pts += 5; bonusTxt = ' (+5 por racha)'; }
+    score += pts;
+    results[idx] = 'ok';
+    markDot(idx + 1, 'ok');
+  } else {
+    streak = 0;
+    results[idx] = 'bad';
+    missed.push(idx);
+    markDot(idx + 1, 'bad');
+  }
+  renderStats();
+
+  const fb = $('feedback');
+  fb.className = 'feedback ' + (good ? 'ok' : 'bad');
+  fb.innerHTML = `<h3>${good ? '¡Correcto!' + bonusTxt : 'Todavía no. Mira cómo se resuelve:'}</h3><p class="explain">${item.why}</p>`;
+  $('btn-next').classList.remove('hidden');
+  $('btn-next').focus({ preventScroll: true });
+}
+
+function next() {
+  if (!answered) return;
+  if (idx === TOTAL - 1) { finish(); return; }
+  idx++;
+  renderQuestion();
+}
+
+function finish() {
+  show('end');
+  $('end-score').textContent = score + ' pts';
+  let rank, detail;
+  if (hits === TOTAL) {
+    rank = 'Maestro de los logaritmos';
+    detail = 'Respondiste las 10 preguntas bien. Intenta ahora explicarle a un compañero la pregunta 4.';
+  } else if (hits >= 8) {
+    rank = 'Casi experto';
+    detail = `Acertaste ${hits} de ${TOTAL}. Repasa las que fallaste y vuelve a jugar.`;
+  } else if (hits >= 5) {
+    rank = 'Buen camino';
+    detail = `Acertaste ${hits} de ${TOTAL}. Lee de nuevo las explicaciones y prueba otra vez: las respuestas cambian de lugar.`;
+  } else {
+    rank = 'Sigue practicando';
+    detail = `Acertaste ${hits} de ${TOTAL}. Repasa la definición (log<sub>b</sub> N = x ⇔ b<sup>x</sup> = N) y las propiedades, y vuelve a intentarlo.`;
+  }
+  $('end-rank').textContent = rank;
+  $('end-detail').innerHTML = detail;
+
+  const rev = $('end-review');
+  if (missed.length) {
+    const items = missed.map((m) => `<li><span class="r-q">${m + 1}. ${deck[m].q}</span>Respuesta correcta: ${deck[m].opts[deck[m].correct]}</li>`).join('');
+    rev.innerHTML = `<p><b>Para repasar:</b></p><ul class="review">${items}</ul><div style="height:8px"></div>`;
+  } else {
+    rev.innerHTML = '';
+  }
+  moveCursor(TOTAL);
+}
+
+/* --- Eventos --- */
+$('btn-start').addEventListener('click', startGame);
+$('btn-next').addEventListener('click', next);
+$('btn-again').addEventListener('click', startGame);
+
+document.addEventListener('keydown', (e) => {
+  if (screens.quiz.classList.contains('hidden')) return;
+  const k = e.key.toUpperCase();
+  const i = LETTERS.indexOf(k);
+  if (i !== -1 && !answered && i < deck[idx].opts.length) { choose(i); }
+});
+
+buildRule();
+renderStats();
+</script>
+</body>
+</html>
